@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BAC Trustee Dashboard — Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">   
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root{
+    --ink-900:#12201c; --ink-700:#37473f; --ink-500:#5c6b62; --ink-300:#93a099; --ink-100:#e4e8e4;
+    --bg-page:#f5f6f3; --bg-card:#ffffff; --bg-sunken:#eef1ec;
+    --teal-900:#04342c; --teal-700:#0a5b47; --teal-600:#00AA8C; --teal-400:#5dcaa5; --teal-100:#d6efe4;
+    --blue-600:#75c8da; --blue-100:#e7f6f8;
+    --amber-700:#b3680c; --amber-500:#fdc41e; --amber-100:#fff6dc; --amber-arrow:#fdc41e; 
+    --border:#dfe3dd; --radius:10px;
+    --shadow:0 1px 2px rgba(18,32,28,0.06);
+    font-family:'Public Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg-page);color:var(--ink-900);}
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 32px 64px;}
+
+  /* header */
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;gap:24px;flex-wrap:wrap;}
+  .quick-access{display:flex;gap:12px;flex-wrap:wrap;}
+  .qa-btn{display:flex;align-items:center;gap:10px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;font-weight:600;font-size:14px;color:var(--ink-900);box-shadow:var(--shadow);cursor:pointer;transition:background .15s ease, box-shadow .15s ease, transform .1s ease;}
+  .qa-btn:hover{background:var(--bg-sunken);box-shadow:0 4px 10px rgba(18,32,28,0.10);}
+  .qa-btn:active{transform:scale(0.98);}
+  .qa-btn .icon{width:20px;height:20px;color:var(--teal-600);display:flex;}
+  .qa-btn .icon svg{width:100%;height:100%;}
+  .qa-btn .arrow{margin-left:6px;color:var(--amber-arrow);font-size:19px;font-weight:700;line-height:1;}
+  .greeting{text-align:right;display:flex;align-items:flex-start;gap:16px;}
+  .greeting .divider{width:1px;align-self:stretch;background:var(--amber-arrow);}
+  .greeting .text h1{font-size:19px;font-weight:700;margin:0 0 4px;display:flex;align-items:center;gap:8px;justify-content:flex-end;}
+  .greeting .text h1 .wave{font-size:26px;line-height:1;}
+  .greeting .text p{margin:0;font-size:12.5px;color:var(--ink-500);font-weight:400;}
+  .greeting .text .role{color:var(--ink-500);font-weight:400;margin-bottom:1px;}
+
+  /* filter bar */
+  .filterbar{display:flex;align-items:center;gap:14px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px;margin-bottom:22px;box-shadow:var(--shadow);flex-wrap:wrap;}
+  .filterbar label{font-size:12px;font-weight:600;color:var(--ink-500);text-transform:none;}
+  .field{display:flex;align-items:center;gap:8px; justify-content: space-between;}
+  .box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+  .field .box{border:1px solid var(--border);border-radius:8px;padding:8px 12px;font-size:13px;background:var(--bg-sunken);color:var(--ink-900);min-width:140px;}
+  .select-wrap{position:relative;display:inline-flex;align-items:center;}
+  select.box{appearance:none;-webkit-appearance:none;-moz-appearance:none;cursor:pointer;padding-right:34px;min-width:170px;width:100%;}
+  .select-wrap .chevron{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--teal-600);pointer-events:none;display:flex;}
+  .select-wrap .chevron svg{width:100%;height:100%;}
+  .btn-filter,.btn-reset{border-radius:8px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s ease, box-shadow .15s ease;}
+  .btn-filter{background:var(--teal-600);color:#fff;border:1px solid var(--teal-600);}
+  .btn-filter:hover{background:var(--teal-700);}
+  .btn-reset{background:transparent;color:var(--teal-600);border:1px solid var(--teal-600);}
+  .btn-reset:hover{background:var(--teal-100);}
+  .fresh{margin-left:auto;font-size:12px;color:var(--teal-700);background:var(--teal-100);padding:6px 10px;border-radius:20px;font-weight:600;}
+
+  section{margin-bottom:30px;}
+  .section-title{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--ink-700);margin:0 0 12px;display:flex;align-items:center;gap:8px;}
+  .section-title .bar{width:4px;height:14px;background:var(--teal-600);border-radius:2px;}
+
+  /* KPI row */
+  .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;}
+  .kpi-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);}
+  .kpi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .kpi-label{font-size:13px;color:var(--ink-900);font-weight:600;}
+  .kpi-icon-group{display:flex;align-items:center;gap:12px;}
+  .kpi-divider{width:1px;height:22px;background:var(--amber-arrow);opacity:0.8;}
+  .kpi-icon{width:32px;height:32px;border-radius:8px;background:var(--amber-100);display:flex;align-items:center;justify-content:center;color:var(--amber-700);}
+  .kpi-icon svg{width:16px;height:16px;}
+  .kpi-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;}
+  .badge-ok{background:var(--teal-100);color:var(--teal-700);}
+  .badge-warn{background:var(--amber-100);color:var(--amber-700);}
+  .badge-risk{background:var(--amber-100);color:var(--amber-700);}
+  .kpi-value{font-size:30px;font-weight:700;font-family:'IBM Plex Mono',monospace;letter-spacing:-0.01em;}
+  .kpi-value.currency{font-size:26px;}
+  .kpi-value .cur-symbol{font-size:16px;font-weight:600;color:var(--ink-500);margin-right:4px;}
+  .kpi-sub{margin-top:10px;}
+  .kpi-sub .kpi-badge{display:inline-block;margin-bottom:7px;}
+  .kpi-stat-line{font-size:12px;color:var(--ink-500);line-height:1.45;}
+  .kpi-stat-line.primary{color:var(--ink-700);font-weight:600;}
+  .kpi-stat-line.secondary{color:var(--ink-300);margin-top:1px;}
+  .kpi-stat-line.risk{color:var(--amber-700);font-weight:600;}
+
+  /* Membership overview: grouped status cards make the relationships easier to scan */
+  .membership-layout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+  .member-card,.contribution-health{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;}
+  .member-card{padding:18px;position:relative;min-height:174px;}
+  .member-card::before{content:'';position:absolute;inset:0 auto 0 0;width:4px;background:var(--teal-600);}
+  .member-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+  .member-card-label{font-size:13px;font-weight:700;color:var(--ink-700);}
+  .member-icon{width:34px;height:34px;border-radius:50%;background:var(--blue-100);color:var(--teal-700);display:grid;place-items:center;}
+  .member-icon svg{width:17px;height:17px;}
+  .member-value-row{display:flex;align-items:baseline;gap:8px;}
+  .member-value{font:700 31px 'IBM Plex Mono',monospace;letter-spacing:-.03em;}
+  .member-caption{font-size:12px;color:var(--ink-500);}
+  .status-split{display:flex;gap:8px;margin-top:16px;}
+  .status-split div{flex:1;border-radius:7px;padding:8px 9px;background:var(--teal-100);}
+  .status-split div:last-child{background:var(--amber-100);}
+  .status-split strong{display:block;font-size:14px;color:var(--teal-700);}
+  .status-split div:last-child strong{color:var(--amber-700);}
+  .status-split span{font-size:10.5px;color:var(--ink-500);}
+  .contribution-health{padding:18px;position:relative;min-height:174px;border-left:4px solid var(--teal-600);}
+  .health-label{font-size:13px;font-weight:700;color:var(--ink-700);}
+  .health-value{margin:7px 0 4px;font:700 25px 'IBM Plex Mono',monospace;letter-spacing:-.03em;}
+  .health-detail{font-size:12px;color:var(--ink-500);}
+  .health-detail strong{color:var(--teal-700);}
+  .late-strip{margin-top:15px;padding-top:12px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .late-strip span{font-size:12px;color:var(--ink-500);}
+  .late-strip strong{color:var(--amber-700);font-size:13px;}
+  .collection-ring{--collection:78%;width:54px;height:54px;border-radius:50%;background:conic-gradient(var(--teal-600) var(--collection),var(--amber-500) 0);display:grid;place-items:center;position:absolute;right:18px;top:18px;}
+  .collection-ring::before{content:'78%';width:42px;height:42px;border-radius:50%;background:var(--bg-card);display:grid;place-items:center;font:700 11px 'IBM Plex Mono',monospace;color:var(--teal-700);}
+  .late-card{border-left-color:var(--amber-500);}
+  .late-card .member-icon{background:var(--amber-100);color:var(--amber-700);}
+  .late-card .member-value{color:var(--amber-700);}
+  .late-card .status-split div{background:var(--amber-100);}
+  .late-card .status-split strong{color:var(--amber-700);}
+
+  /* Service ops */
+  .ops-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px;}
+  .ops-card{background:var(--bg-card);border:1px solid var(--border);border-top:4px solid var(--teal-600);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);}
+  .ops-title{font-size:13px;font-weight:600;color:var(--ink-700);margin-bottom:10px;}
+  .ops-row{display:flex;justify-content:space-between;align-items:baseline;}
+  .ops-value{font-size:26px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:var(--teal-700);}
+  .ops-delta{font-size:12px;color:var(--ink-500);}
+
+  /* charts */
+  .chart-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(370px,1fr));gap:16px;}
+  .chart-card{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px 14px;box-shadow:var(--shadow);}
+  .chart-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
+  .chart-title{font-size:14px;font-weight:600;color:var(--ink-900);}
+  .chart-note{font-size:11.5px;color:var(--ink-500);margin:0 0 12px;}
+  .legend-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink-500);margin-top:8px;}
+  .legend-row span{display:flex;align-items:center;gap:6px;}
+  .swatch{width:10px;height:10px;border-radius:2px;display:inline-block;}
+  .chart-canvas-wrap{position:relative;width:100%;}
+
+  /* progress bar */
+  .progress-track{position:relative;background:var(--bg-sunken);border-radius:8px;height:34px;overflow:hidden;margin-top:6px;}
+  .progress-fill{position:absolute;top:0;left:0;height:100%;background:var(--teal-600);display:flex;align-items:center;padding-left:12px;color:#fff;font-size:12.5px;font-weight:600;font-family:'IBM Plex Mono',monospace;}
+  .progress-labels{display:flex;justify-content:space-between;margin-top:6px;font-size:11.5px;color:var(--ink-500);}
+  .progress-callout{font-size:12.5px;color:var(--teal-700);font-weight:600;margin-top:6px;}
+  .contribution-summary{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0;}
+  .amount-tile{border-radius:8px;padding:12px;background:var(--teal-100);}
+  .amount-tile.outstanding{background:var(--amber-100);}
+  .amount-tile span{display:block;font-size:11px;color:var(--ink-500);margin-bottom:4px;}
+  .amount-tile strong{font:700 17px 'IBM Plex Mono',monospace;color:var(--teal-700);}
+  .amount-tile.outstanding strong{color:var(--amber-700);}
+  .collection-meter{height:12px;border-radius:999px;background:var(--amber-500);overflow:hidden;position:relative;}
+  .collection-meter span{display:block;height:100%;width:78%;background:var(--teal-600);border-radius:999px;}
+  .collection-axis{display:flex;justify-content:space-between;margin-top:7px;font-size:11px;color:var(--ink-500);}
+
+  footer{margin-top:20px;font-size:11.5px;color:var(--ink-300);text-align:center;}
+  @media (max-width:1000px){.membership-layout{grid-template-columns:1fr 1fr;}}
+  @media (max-width:700px){.topbar{flex-direction:column;} .greeting{text-align:left;}.membership-layout{grid-template-columns:1fr;}.chart-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="quick-access">
+      <div class="qa-btn">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8" r="3"/><path d="M2.5 19c0-3 2.6-5 6-5s6 2 6 5"/><circle cx="17" cy="8.5" r="2.3"/><path d="M14.8 14.2c2.6.3 4.7 2.1 4.7 4.8"/></svg></span>
+        Claims register<span class="arrow"><i class="fa-solid fa-arrow-right fa-2xs"></i></span>
+      </div>
+      <div class="qa-btn">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="8.2" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="15.8" cy="12" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+        Pending tasks<span class="arrow"><i class="fa-solid fa-arrow-right fa-2xs"></i></span>
+      </div>
+    </div>
+    <div class="greeting">
+      <div class="divider"></div>
+      <div class="text">
+        <h1>Good afternoon, Patience<span class="wave">👋</span></h1>
+        <p class="role">GM Operations / CEO / BAC Trustee</p>
+        <p>Thursday, 27 August 2026</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="filterbar">
+    <label>As of</label>
+    <div class="field">
+    <span class="box">
+        <span>27 Aug 2026</span>
+        <i class="fa-regular fa-calendar"></i>
+    </span>
+</div>
+    <label>To</label>
+    <div class="field">
+    <span class="box">
+        <span>27 Aug 2026</span>
+        <i class="fa-regular fa-calendar"></i>
+    </span>
+    </div>
+    <label>GIPF office</label>
+    <div class="field">
+      <div class="select-wrap">
+        <select class="box">
+          <option>All branches</option>
+          <option>Windhoek</option>
+          <option>Walvis Bay</option>
+          <option>Swakopmund</option>
+          <option>Oshakati</option>
+          <option>Ondangwa</option>
+          <option>Rundu</option>
+          <option>Katima Mulilo</option>
+          <option>Otjiwarongo</option>
+          <option>Keetmanshoop</option>
+          <option>Gobabis</option>
+          <option>Rehoboth</option>
+          <option>Mariental</option>
+          <option>Tsumeb</option>
+          <option>Okahandja</option>
+        </select>
+        <span class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+    </div>
+    <button class="btn-filter">Filter</button>
+    <button class="btn-reset">Reset</button>
+    <span class="fresh">Data current as of 27 Aug 2026, 14:02</span>
+  </div>
+
+  <section>
+    <p class="section-title"><span class="bar"></span>Membership overview</p>
+    <div class="membership-layout">
+      <article class="member-card">
+        <div class="member-card-head"><span class="member-card-label">Employers</span><span class="member-icon"><i class="fa-solid fa-building"></i></span></div>
+        <div class="member-value-row"><span class="member-value">31</span><span class="member-caption">registered employers</span></div>
+        <div class="status-split"><div><strong>24</strong><span>Active</span></div><div><strong>7</strong><span>Dormant</span></div></div>
+      </article>
+      <article class="member-card">
+        <div class="member-card-head"><span class="member-card-label">Members</span><span class="member-icon"><i class="fa-solid fa-users"></i></span></div>
+        <div class="member-value-row"><span class="member-value">7</span><span class="member-caption">active members</span></div>
+        <div class="status-split"><div><strong>7</strong><span>Active</span></div><div><strong>0</strong><span>Potential</span></div></div>
+      </article>
+      <article class="contribution-health">
+        <div class="health-label">Contributions received</div><div class="health-value">N$ 3,900,000</div><div class="health-detail"><strong>12 transactions</strong> received this period</div><div class="late-strip"><span>Expected N$ 5,000,000</span><strong>On track</strong></div>
+        <div class="collection-ring" aria-label="78 percent of expected contributions received"></div>
+      </article>
+      <article class="member-card late-card">
+        <div class="member-card-head"><span class="member-card-label">Late contributions</span><span class="member-icon"><i class="fa-solid fa-clock"></i></span></div>
+        <div class="member-value-row"><span class="member-value">8</span><span class="member-caption">require follow-up</span></div>
+        <div class="status-split"><div><strong>+3</strong><span>vs last period</span></div><div><strong>Review</strong><span>Priority action</span></div></div>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-title"><span class="bar"></span>Service operations</p>
+    <div class="ops-grid">
+      <div class="ops-card">
+        <div class="ops-title">Claims filed</div>
+        <div class="ops-row"><span class="ops-value">56</span><span class="ops-delta">5 filed today</span></div>
+      </div>
+      <div class="ops-card">
+        <div class="ops-title">Claims payments processed</div>
+        <div class="ops-row"><span class="ops-value">12</span><span class="ops-delta">10 this week</span></div>
+      </div>
+      <div class="ops-card">
+        <div class="ops-title">Avg. claims processing time</div>
+        <div class="ops-row"><span class="ops-value">12<span style="font-size:14px;">d</span></span><span class="ops-delta">Target: 10d</span></div>
+      </div>
+      <div class="ops-card" style="border-top-color:var(--amber-700);">
+        <div class="ops-title">Unclaimed benefits</div>
+        <div class="ops-row"><span class="ops-value" style="color:var(--amber-700)">7</span><span class="ops-delta">2 identified this week</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="section-title"><span class="bar"></span>Visual trends</p>
+    <div class="chart-grid">
+
+      <div class="chart-card">
+        <div class="chart-head"><span class="chart-title">Potential vs active employers &amp; members</span></div>
+        <p class="chart-note">Count, as of 27 Aug 2026</p>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="potentialActive" role="img" aria-label="Bar chart comparing potential and active employers and members. Employers: 31 potential, 24 active. Members: 9 potential, 7 active.">Employers: 31 potential, 24 active. Members: 9 potential, 7 active.</canvas>
+        </div>
+        <div class="legend-row">
+          <span><span class="swatch" style="background:#FDC41E"></span>Potential</span>
+          <span><span class="swatch" style="background:#00AA8C"></span>Active</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><span class="chart-title">Expected vs received contributions</span></div>
+        <p class="chart-note">Period to date - collection progress against the expected amount</p>
+        <div class="contribution-summary"><div class="amount-tile"><span>Received</span><strong>N$ 3.9m</strong></div><div class="amount-tile outstanding"><span>Outstanding</span><strong>N$ 1.1m</strong></div></div>
+        <div class="collection-meter" aria-label="78 percent received"><span></span></div>
+        <div class="collection-axis"><span>0%</span><span>78% received</span><span>N$ 5.0m expected</span></div>
+        <p class="progress-callout">Collection is on track; the yellow remainder clearly shows the amount still due.</p>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><span class="chart-title">Approved vs paid claims</span></div>
+        <p class="chart-note">Jan – Aug 2026, N$ thousands. Shaded area = approved-but-unpaid backlog</p>
+        <div class="chart-canvas-wrap" style="height:230px;">
+          <canvas id="approvedPaid" role="img" aria-label="Line chart from January to August 2026 showing approved claims rising from 210 to 340 thousand namibian dollars, and paid claims rising more slowly from 90 to 190 thousand, with the gap between them shaded to represent a growing backlog">Approved claims trend upward from 210 to 340. Paid claims trend from 90 to 190. The gap between the two lines is the unpaid backlog.</canvas>
+        </div>
+        <div class="legend-row">
+          <span><span class="swatch" style="background:#75C8DA"></span>Approved</span>
+          <span><span class="swatch" style="background:#0f6e56"></span>Paid</span>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><span class="chart-title">BAC claims filed</span></div>
+        <p class="chart-note">2026, count per month</p>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="bacClaims" role="img" aria-label="Bar chart of BAC claims filed by month: January 18, February 15, March 9, April 14">January 18, February 15, March 9, April 14.</canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><span class="chart-title">Complaints trend</span></div>
+        <p class="chart-note">2026, count per month, dashed line = 12-month average</p>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="complaintsTrend" role="img" aria-label="Line chart of complaints from January to July 2026, fluctuating between 4 and 11, with a reference average line at 7">Complaints ranged from 4 to 11 across the period, against an average of 7.</canvas>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><span class="chart-title">Member events</span></div>
+        <p class="chart-note">Cumulative attendees, 2026 year to date</p>
+        <div class="chart-canvas-wrap" style="height:220px;">
+          <canvas id="memberEvents" role="img" aria-label="Line chart of cumulative member event attendance in 2026. Biometric verification events reached 420 attendees. Member education events reached 180 attendees.">Biometric verification events: 420 cumulative attendees. Member education events: 180 cumulative attendees.</canvas>
+        </div>
+        <div class="legend-row">
+          <span><span class="swatch" style="background:#75C8DA"></span>Biometric verification</span>
+          <span><span class="swatch" style="background:#0f6e56"></span>Member education</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>BAC Trustee Dashboard <br/>
+&copy; 2026 FundMaster. All rights reserved.</footer>
+  </footer>
+</div>
+
+<script>
+const gridColor = '#e1e0d9';
+const inkMuted = '#5c6b62';
+Chart.defaults.font.family = "'Public Sans', sans-serif";
+Chart.defaults.color = inkMuted;
+
+new Chart(document.getElementById('potentialActive'), {
+  type:'bar',
+  data:{ labels:['Employers','Members'],
+    datasets:[
+      {label:'Potential', data:[31,9], backgroundColor:'#FDC41E', borderRadius:4, barPercentage:0.6},
+      {label:'Active', data:[24,7], backgroundColor:'#00AA8C', borderRadius:4, barPercentage:0.6}
+    ]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}, tooltip:{enabled:true}},
+    scales:{ y:{beginAtZero:true, grid:{color:gridColor}, title:{display:true,text:'Count'}}, x:{grid:{display:false}} }}
+});
+
+new Chart(document.getElementById('approvedPaid'), {
+  type:'line',
+  data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
+    datasets:[
+      {label:'Approved', data:[210,240,225,260,245,200,280,340], borderColor:'#75C8DA', backgroundColor:'rgba(117,200,218,0.18)', fill:'+1', tension:0.3, pointRadius:3, borderWidth:2},
+      {label:'Paid', data:[90,100,105,120,130,135,160,190], borderColor:'#0f6e56', backgroundColor:'transparent', fill:false, tension:0.3, pointRadius:3, borderWidth:2}
+    ]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{ y:{title:{display:true,text:'N$ thousands'}, grid:{color:gridColor}}, x:{grid:{display:false}} }}
+});
+
+new Chart(document.getElementById('bacClaims'), {
+  type:'bar',
+  data:{ labels:['Jan','Feb','Mar','Apr'],
+    datasets:[{data:[18,15,9,14], backgroundColor:'#00AA8C', borderRadius:4}]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{ y:{beginAtZero:true, title:{display:true,text:'Claims filed'}, grid:{color:gridColor}}, x:{grid:{display:false}} }}
+});
+
+new Chart(document.getElementById('complaintsTrend'), {
+  type:'line',
+  data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+    datasets:[
+      {label:'Complaints', data:[6,8,7,9,11,8,4], borderColor:'#FDC41E', backgroundColor:'rgba(253,196,30,0.16)', fill:true, tension:0.3, pointRadius:3, borderWidth:2},
+      {label:'Average', data:[7,7,7,7,7,7,7], borderColor:'#93a099', borderDash:[5,4], pointRadius:0, borderWidth:1.5}
+    ]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{ y:{beginAtZero:true, title:{display:true,text:'Count'}, grid:{color:gridColor}}, x:{grid:{display:false}} }}
+});
+
+new Chart(document.getElementById('memberEvents'), {
+  type:'line',
+  data:{ labels:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug'],
+    datasets:[
+      {label:'Biometric verification', data:[20,90,180,250,310,360,395,420], borderColor:'#75C8DA', backgroundColor:'transparent', tension:0.3, pointRadius:2, borderWidth:2},
+      {label:'Member education', data:[5,20,40,65,95,125,155,180], borderColor:'#0f6e56', backgroundColor:'transparent', tension:0.3, pointRadius:2, borderWidth:2}
+    ]},
+  options:{responsive:true, maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{ y:{beginAtZero:true, title:{display:true,text:'Cumulative attendees'}, grid:{color:gridColor}}, x:{grid:{display:false}} }}
+});
+</script>
+</body>
+</html>
